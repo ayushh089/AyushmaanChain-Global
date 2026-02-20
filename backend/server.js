@@ -10,6 +10,13 @@ const fetchRecordRouter = require("./routes/fetchRecord");
 const fetchProof = require("./routes/fetchProof");
 const decryptQRRouter = require("./routes/decryptQR");
 
+const patientRouter = require("./routes/patientRouter");
+// const hospitalRouter = require("./routes/hospitalRouter");
+// const rehabRouter = require("./routes/rehabRouter");
+// const rehabReferralRouter = require("./routes/rehabReferralRouter");
+
+
+
 const app = express();
 
 app.use(
@@ -39,6 +46,14 @@ app.use("/upload", uploadFileRouter);
 app.use("/fetchData", fetchRecordRouter);
 app.use("/decryptQR",decryptQRRouter)
 app.use("/get-merkle-proof",fetchProof)
+
+
+
+app.use("/patient", patientRouter);
+// app.use("/hospital", hospitalRouter);
+// app.use("/rehab", rehabRouter);
+// app.use("/rehab-referral", rehabReferralRouter);
+
 app.listen(5000, () => {
   console.log("Server is running 5000");
 });
