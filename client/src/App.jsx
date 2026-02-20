@@ -108,7 +108,7 @@ function MainContent() {
       )}
 
       {/* Fallback for logged-out */}
-      {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
+      {!user && <Route path="*" element={<Navigate to="/" replace />} />}
     </Routes>
   );
 }
