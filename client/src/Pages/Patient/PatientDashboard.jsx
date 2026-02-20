@@ -2,11 +2,11 @@ import React, { useState, useEffect } from "react";
 import useMedicalRecord from "../../hooks/useMedicalRecord";
 import { useAuth } from "../../context/AuthContext";
 import useUserRegistry from "../../hooks/useUserRegistry";
-import { 
-  User, 
-  FileText, 
-  Hospital, 
-  Package, 
+import {
+  User,
+  FileText,
+  Hospital,
+  Package,
   Activity,
   MapPin,
   Phone,
@@ -30,17 +30,34 @@ import {
   ChevronRight,
   Search,
   Filter,
-  Info
-} from 'lucide-react';
+  Info,
+  LogOut,
+  Copy,
+  Check,
+} from "lucide-react";
 
 const PatientDashboard = () => {
   const [records, setRecords] = useState([]);
   const [viewType, setViewType] = useState("table");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [copied, setCopied] = useState(false);
   const { contract, account } = useMedicalRecord();
   const { contract: contractUser, account: accountUser } = useUserRegistry();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+  };
+
+  const handleCopy = () => {
+    if (user?.wallet_address) {
+      navigator.clipboard.writeText(user.wallet_address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   // Mock data for new features
   const [profile, setProfile] = useState({
@@ -56,8 +73,13 @@ const PatientDashboard = () => {
     passport: "P12345678",
     travelHistory: [
       { id: 1, date: "2024-10-15", type: "Visa Approved", status: "completed" },
-      { id: 2, date: "2024-10-18", type: "Travel to Kenya", status: "completed" }
-    ]
+      {
+        id: 2,
+        date: "2024-10-18",
+        type: "Travel to Kenya",
+        status: "completed",
+      },
+    ],
   });
 
   const [exploreHospitals, setExploreHospitals] = useState([
@@ -73,8 +95,12 @@ const PatientDashboard = () => {
       verified: true,
       accreditation: "JCI Accredited",
       doctors: [
-        { name: "Dr. Sarah Johnson", specialty: "Cardiac Surgeon", experience: "15 years" }
-      ]
+        {
+          name: "Dr. Sarah Johnson",
+          specialty: "Cardiac Surgeon",
+          experience: "15 years",
+        },
+      ],
     },
     {
       id: 2,
@@ -86,7 +112,7 @@ const PatientDashboard = () => {
       distance: "5.1 km",
       image: "/api/placeholder/400/200",
       verified: true,
-      accreditation: "ISO Certified"
+      accreditation: "ISO Certified",
     },
     {
       id: 3,
@@ -98,8 +124,8 @@ const PatientDashboard = () => {
       distance: "7.8 km",
       image: "/api/placeholder/400/200",
       verified: true,
-      accreditation: "Joint Commission International"
-    }
+      accreditation: "Joint Commission International",
+    },
   ]);
 
   const [surgeryPackages, setSurgeryPackages] = useState([
@@ -115,7 +141,7 @@ const PatientDashboard = () => {
       verificationHash: "0x7d8f9e3a2b1c4d5e6f7a8b9c0d1e2f3a4b5c6d7e",
       rating: 4.9,
       savings: 60,
-      comparedToUS: "Save 60% vs US"
+      comparedToUS: "Save 60% vs US",
     },
     {
       id: 2,
@@ -129,7 +155,7 @@ const PatientDashboard = () => {
       verificationHash: "0x8e9f0a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r",
       rating: 4.7,
       savings: 55,
-      comparedToUS: "Save 55% vs US"
+      comparedToUS: "Save 55% vs US",
     },
     {
       id: 3,
@@ -143,8 +169,8 @@ const PatientDashboard = () => {
       verificationHash: "0x9f0g1h2i3j4k5l6m7n8o9p0q1r2s3t4u5v6w7x8y",
       rating: 4.8,
       savings: 58,
-      comparedToUS: "Save 58% vs US"
-    }
+      comparedToUS: "Save 58% vs US",
+    },
   ]);
 
   const [rehabReferrals, setRehabReferrals] = useState([
@@ -160,8 +186,8 @@ const PatientDashboard = () => {
       duration: "2 weeks",
       progress: 35,
       coordinator: "Grace Mwangi",
-      contact: "+254 700 345 678"
-    }
+      contact: "+254 700 345 678",
+    },
   ]);
 
   const [selectedHospital, setSelectedHospital] = useState(null);
@@ -193,25 +219,40 @@ const PatientDashboard = () => {
     return acc;
   }, {});
 
-  const filteredHospitals = exploreHospitals.filter(hospital => 
-    hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    hospital.specialties.some(s => s.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredHospitals = exploreHospitals.filter(
+    (hospital) =>
+      hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      hospital.specialties.some((s) =>
+        s.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
   );
 
-  const filteredPackages = surgeryPackages.filter(pkg =>
-    pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    pkg.hospital.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredPackages = surgeryPackages.filter(
+    (pkg) =>
+      pkg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      pkg.hospital.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900">
       {/* Mobile Sidebar */}
-      <div className={`fixed inset-0 bg-gray-800 bg-opacity-75 z-20 transition-opacity lg:hidden ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
-           onClick={() => setSidebarOpen(false)} />
-      
-      <div className={`fixed inset-y-0 left-0 w-64 bg-white/10 backdrop-blur-xl transform transition-transform duration-300 ease-in-out z-30 lg:hidden ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div
+        className={`fixed inset-0 bg-gray-800 bg-opacity-75 z-20 transition-opacity lg:hidden ${
+          sidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      <div
+        className={`fixed inset-y-0 left-0 w-64 bg-white/10 backdrop-blur-xl transform transition-transform duration-300 ease-in-out z-30 lg:hidden ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
         <div className="p-4">
-          <button onClick={() => setSidebarOpen(false)} className="absolute top-4 right-4 text-white">
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="absolute top-4 right-4 text-white"
+          >
             <X className="h-6 w-6" />
           </button>
           <nav className="mt-8">
@@ -221,7 +262,7 @@ const PatientDashboard = () => {
               { id: "explore", label: "Explore Hospitals", icon: Hospital },
               { id: "packages", label: "Surgery Packages", icon: Package },
               { id: "rehab", label: "Rehab Status", icon: Activity },
-              { id: "records", label: "Medical Records", icon: FileText }
+              { id: "records", label: "Medical Records", icon: FileText },
             ].map((item) => {
               const Icon = item.icon;
               return (
@@ -232,9 +273,9 @@ const PatientDashboard = () => {
                     setSidebarOpen(false);
                   }}
                   className={`w-full flex items-center space-x-2 py-2 px-4 rounded-lg mb-1 transition-colors ${
-                    activeTab === item.id 
-                      ? 'bg-emerald-600 text-white' 
-                      : 'text-green-100 hover:bg-white/10'
+                    activeTab === item.id
+                      ? "bg-emerald-600 text-white"
+                      : "text-green-100 hover:bg-white/10"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -253,19 +294,46 @@ const PatientDashboard = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center">
-                <button onClick={() => setSidebarOpen(true)} className="lg:hidden mr-4 text-white">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden mr-4 text-white"
+                >
                   <Menu className="h-6 w-6" />
                 </button>
-                <h1 className="text-xl font-semibold text-white">MediJourney</h1>
+                <span className="text-xl font-bold text-white tracking-wide">
+                  AyushmaanChain
+                </span>
               </div>
               <div className="flex items-center space-x-4">
                 <Bell className="h-5 w-5 text-green-200 cursor-pointer hover:text-white" />
+                <div className="hidden md:flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300">
+                  <span className="text-sm text-white font-medium">
+                    {user?.wallet_address?.slice(0, 6)}...
+                    {user?.wallet_address?.slice(-4)}
+                  </span>
+                  <button
+                    onClick={handleCopy}
+                    className="text-white/80 hover:text-white transition-colors p-1 rounded-md hover:bg-white/20"
+                    title={copied ? "Copied!" : "Copy address"}
+                  >
+                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                </div>
                 <div className="flex items-center space-x-2">
                   <div className="h-8 w-8 bg-emerald-600 rounded-full flex items-center justify-center">
                     <User className="h-4 w-4 text-white" />
                   </div>
-                  <span className="text-sm text-green-100 hidden sm:inline">{profile.name}</span>
+                  <span className="text-sm text-green-100 hidden sm:inline">
+                    {profile.name}
+                  </span>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="hidden sm:flex items-center space-x-2 bg-white/10 hover:bg-red-500/20 text-white px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 border border-white/20"
+                >
+                  <LogOut size={16} />
+                  <span>Logout</span>
+                </button>
               </div>
             </div>
           </div>
@@ -280,7 +348,7 @@ const PatientDashboard = () => {
               { id: "explore", label: "Explore Hospitals", icon: Hospital },
               { id: "packages", label: "Surgery Packages", icon: Package },
               { id: "rehab", label: "Rehab Status", icon: Activity },
-              { id: "records", label: "Medical Records", icon: FileText }
+              { id: "records", label: "Medical Records", icon: FileText },
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -289,8 +357,8 @@ const PatientDashboard = () => {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab.id
-                      ? 'bg-emerald-600 text-white shadow-lg'
-                      : 'text-green-100 hover:bg-white/10'
+                      ? "bg-emerald-600 text-white shadow-lg"
+                      : "text-green-100 hover:bg-white/10"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -318,7 +386,7 @@ const PatientDashboard = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Tab Content */}
           {activeTab === "overview" && (
-            <OverviewTab 
+            <OverviewTab
               profile={profile}
               records={records}
               surgeryPackages={surgeryPackages}
@@ -331,7 +399,7 @@ const PatientDashboard = () => {
           )}
 
           {activeTab === "explore" && (
-            <ExploreHospitalsTab 
+            <ExploreHospitalsTab
               hospitals={filteredHospitals}
               selectedHospital={selectedHospital}
               setSelectedHospital={setSelectedHospital}
@@ -350,7 +418,7 @@ const PatientDashboard = () => {
           )}
 
           {activeTab === "records" && (
-            <RecordsTab 
+            <RecordsTab
               records={records}
               groupedRecords={groupedRecords}
               viewType={viewType}
@@ -374,7 +442,7 @@ const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals }) => (
           Welcome back, <span className="text-emerald-300">{profile.name}</span>
         </h2>
         <p className="text-green-200">Your medical journey continues</p>
-        
+
         {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
           <button className="flex flex-col items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
@@ -408,7 +476,9 @@ const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals }) => (
               <div className="flex justify-between items-start">
                 <div>
                   <p className="text-white font-medium">{rehab.rehabCenter}</p>
-                  <p className="text-sm text-green-200">Post {rehab.surgeryType}</p>
+                  <p className="text-sm text-green-200">
+                    Post {rehab.surgeryType}
+                  </p>
                 </div>
                 <span className="px-3 py-1 bg-emerald-600/30 text-emerald-300 rounded-full text-xs">
                   {rehab.progress}% Complete
@@ -416,7 +486,7 @@ const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals }) => (
               </div>
               <div className="mt-4">
                 <div className="w-full bg-white/20 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-emerald-500 h-2 rounded-full"
                     style={{ width: `${rehab.progress}%` }}
                   />
@@ -472,7 +542,9 @@ const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals }) => (
                 </span>
               </div>
               <p className="text-xs text-green-300 mt-1">{pkg.hospital}</p>
-              <p className="text-sm text-white mt-1">₹{pkg.cost.toLocaleString()}</p>
+              <p className="text-sm text-white mt-1">
+                ₹{pkg.cost.toLocaleString()}
+              </p>
             </div>
           ))}
         </div>
@@ -529,15 +601,21 @@ const ProfileTab = ({ profile, setProfile }) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-white mb-3">Personal Information</h3>
-          
+          <h3 className="text-lg font-medium text-white mb-3">
+            Personal Information
+          </h3>
+
           <div>
-            <label className="block text-sm text-green-300 mb-1">Full Name</label>
+            <label className="block text-sm text-green-300 mb-1">
+              Full Name
+            </label>
             {isEditing ? (
               <input
                 type="text"
                 value={editedProfile.name}
-                onChange={(e) => setEditedProfile({...editedProfile, name: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({ ...editedProfile, name: e.target.value })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -551,7 +629,9 @@ const ProfileTab = ({ profile, setProfile }) => {
               <input
                 type="email"
                 value={editedProfile.email}
-                onChange={(e) => setEditedProfile({...editedProfile, email: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({ ...editedProfile, email: e.target.value })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -565,7 +645,9 @@ const ProfileTab = ({ profile, setProfile }) => {
               <input
                 type="tel"
                 value={editedProfile.phone}
-                onChange={(e) => setEditedProfile({...editedProfile, phone: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({ ...editedProfile, phone: e.target.value })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -574,12 +656,16 @@ const ProfileTab = ({ profile, setProfile }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-green-300 mb-1">Date of Birth</label>
+            <label className="block text-sm text-green-300 mb-1">
+              Date of Birth
+            </label>
             {isEditing ? (
               <input
                 type="date"
                 value={editedProfile.dob}
-                onChange={(e) => setEditedProfile({...editedProfile, dob: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({ ...editedProfile, dob: e.target.value })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -590,7 +676,9 @@ const ProfileTab = ({ profile, setProfile }) => {
 
         {/* Address & Medical Info */}
         <div className="space-y-4">
-          <h3 className="text-lg font-medium text-white mb-3">Address & Medical Info</h3>
+          <h3 className="text-lg font-medium text-white mb-3">
+            Address & Medical Info
+          </h3>
 
           <div>
             <label className="block text-sm text-green-300 mb-1">Country</label>
@@ -598,7 +686,12 @@ const ProfileTab = ({ profile, setProfile }) => {
               <input
                 type="text"
                 value={editedProfile.country}
-                onChange={(e) => setEditedProfile({...editedProfile, country: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({
+                    ...editedProfile,
+                    country: e.target.value,
+                  })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -607,12 +700,16 @@ const ProfileTab = ({ profile, setProfile }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-green-300 mb-1">County/City</label>
+            <label className="block text-sm text-green-300 mb-1">
+              County/City
+            </label>
             {isEditing ? (
               <input
                 type="text"
                 value={editedProfile.county}
-                onChange={(e) => setEditedProfile({...editedProfile, county: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({ ...editedProfile, county: e.target.value })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               />
             ) : (
@@ -625,7 +722,12 @@ const ProfileTab = ({ profile, setProfile }) => {
             {isEditing ? (
               <textarea
                 value={editedProfile.address}
-                onChange={(e) => setEditedProfile({...editedProfile, address: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({
+                    ...editedProfile,
+                    address: e.target.value,
+                  })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
                 rows="2"
               />
@@ -635,11 +737,18 @@ const ProfileTab = ({ profile, setProfile }) => {
           </div>
 
           <div>
-            <label className="block text-sm text-green-300 mb-1">Blood Group</label>
+            <label className="block text-sm text-green-300 mb-1">
+              Blood Group
+            </label>
             {isEditing ? (
               <select
                 value={editedProfile.bloodGroup}
-                onChange={(e) => setEditedProfile({...editedProfile, bloodGroup: e.target.value})}
+                onChange={(e) =>
+                  setEditedProfile({
+                    ...editedProfile,
+                    bloodGroup: e.target.value,
+                  })
+                }
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-white"
               >
                 <option value="A+">A+</option>
@@ -663,16 +772,23 @@ const ProfileTab = ({ profile, setProfile }) => {
         <h3 className="text-lg font-medium text-white mb-4">Travel History</h3>
         <div className="space-y-3">
           {profile.travelHistory.map((item) => (
-            <div key={item.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3">
+            <div
+              key={item.id}
+              className="flex items-center justify-between bg-white/5 rounded-lg p-3"
+            >
               <div className="flex items-center">
                 <Globe className="h-4 w-4 text-emerald-400 mr-2" />
                 <span className="text-white text-sm">{item.type}</span>
               </div>
               <div className="flex items-center">
                 <span className="text-xs text-green-300 mr-3">{item.date}</span>
-                <span className={`px-2 py-1 rounded-full text-xs ${
-                  item.status === 'completed' ? 'bg-green-600/30 text-green-300' : 'bg-yellow-600/30 text-yellow-300'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs ${
+                    item.status === "completed"
+                      ? "bg-green-600/30 text-green-300"
+                      : "bg-yellow-600/30 text-yellow-300"
+                  }`}
+                >
                   {item.status}
                 </span>
               </div>
@@ -685,7 +801,14 @@ const ProfileTab = ({ profile, setProfile }) => {
 };
 
 // Explore Hospitals Tab
-const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital, searchTerm, filterSpecialty, setFilterSpecialty }) => {
+const ExploreHospitalsTab = ({
+  hospitals,
+  selectedHospital,
+  setSelectedHospital,
+  searchTerm,
+  filterSpecialty,
+  setFilterSpecialty,
+}) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Hospital List */}
@@ -701,14 +824,16 @@ const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital,
             onClick={() => setSelectedHospital(hospital)}
             className={`bg-white/10 backdrop-blur-md rounded-xl border transition-all cursor-pointer ${
               selectedHospital?.id === hospital.id
-                ? 'border-emerald-500 bg-white/20'
-                : 'border-white/20 hover:bg-white/15'
+                ? "border-emerald-500 bg-white/20"
+                : "border-white/20 hover:bg-white/15"
             }`}
           >
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{hospital.name}</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    {hospital.name}
+                  </h3>
                   <p className="text-sm text-green-200 flex items-center mt-1">
                     <MapPin className="h-4 w-4 mr-1" />
                     {hospital.location}
@@ -717,13 +842,18 @@ const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital,
                 <div className="flex items-center">
                   <Star className="h-4 w-4 text-yellow-400 fill-current" />
                   <span className="text-white ml-1">{hospital.rating}</span>
-                  <span className="text-xs text-green-300 ml-1">({hospital.reviews})</span>
+                  <span className="text-xs text-green-300 ml-1">
+                    ({hospital.reviews})
+                  </span>
                 </div>
               </div>
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {hospital.specialties.map((specialty, idx) => (
-                  <span key={idx} className="px-2 py-1 bg-emerald-600/30 text-emerald-300 rounded-full text-xs">
+                  <span
+                    key={idx}
+                    className="px-2 py-1 bg-emerald-600/30 text-emerald-300 rounded-full text-xs"
+                  >
                     {specialty}
                   </span>
                 ))}
@@ -732,7 +862,9 @@ const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital,
               <div className="mt-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <Shield className="h-4 w-4 text-emerald-400 mr-1" />
-                  <span className="text-xs text-green-300">{hospital.accreditation}</span>
+                  <span className="text-xs text-green-300">
+                    {hospital.accreditation}
+                  </span>
                 </div>
                 <span className="text-sm text-white">{hospital.distance}</span>
               </div>
@@ -745,24 +877,33 @@ const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital,
       <div className="lg:col-span-1">
         {selectedHospital ? (
           <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-6 sticky top-6">
-            <h3 className="text-lg font-semibold text-white mb-4">{selectedHospital.name}</h3>
-            
+            <h3 className="text-lg font-semibold text-white mb-4">
+              {selectedHospital.name}
+            </h3>
+
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-green-300">Location</p>
-                <p className="text-white text-sm">{selectedHospital.location}</p>
+                <p className="text-white text-sm">
+                  {selectedHospital.location}
+                </p>
               </div>
 
               <div>
                 <p className="text-xs text-green-300">Accreditation</p>
-                <p className="text-white text-sm">{selectedHospital.accreditation}</p>
+                <p className="text-white text-sm">
+                  {selectedHospital.accreditation}
+                </p>
               </div>
 
               <div>
                 <p className="text-xs text-green-300">Specialties</p>
                 <div className="flex flex-wrap gap-1 mt-1">
                   {selectedHospital.specialties.map((s, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-emerald-600/30 text-emerald-300 rounded-full text-xs">
+                    <span
+                      key={idx}
+                      className="px-2 py-1 bg-emerald-600/30 text-emerald-300 rounded-full text-xs"
+                    >
                       {s}
                     </span>
                   ))}
@@ -775,11 +916,15 @@ const ExploreHospitalsTab = ({ hospitals, selectedHospital, setSelectedHospital,
                   selectedHospital.doctors.map((doctor, idx) => (
                     <div key={idx} className="mt-2 bg-white/5 rounded-lg p-2">
                       <p className="text-white text-sm">{doctor.name}</p>
-                      <p className="text-xs text-green-300">{doctor.specialty} • {doctor.experience}</p>
+                      <p className="text-xs text-green-300">
+                        {doctor.specialty} • {doctor.experience}
+                      </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-white mt-1">Information available on request</p>
+                  <p className="text-sm text-white mt-1">
+                    Information available on request
+                  </p>
                 )}
               </div>
 
@@ -809,7 +954,10 @@ const SurgeryPackagesTab = ({ packages }) => (
 
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {packages.map((pkg) => (
-        <div key={pkg.id} className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden hover:bg-white/15 transition-all">
+        <div
+          key={pkg.id}
+          className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 overflow-hidden hover:bg-white/15 transition-all"
+        >
           <div className="p-6">
             <div className="flex justify-between items-start">
               <h3 className="text-lg font-semibold text-white">{pkg.name}</h3>
@@ -824,21 +972,30 @@ const SurgeryPackagesTab = ({ packages }) => (
             <p className="text-sm text-green-200 mt-1">{pkg.hospital}</p>
 
             <div className="mt-4 flex items-baseline">
-              <span className="text-2xl font-bold text-white">₹{pkg.cost.toLocaleString()}</span>
-              <span className="text-xs text-green-300 ml-2">{pkg.currency}</span>
+              <span className="text-2xl font-bold text-white">
+                ₹{pkg.cost.toLocaleString()}
+              </span>
+              <span className="text-xs text-green-300 ml-2">
+                {pkg.currency}
+              </span>
             </div>
 
             <div className="mt-2 flex items-center">
               <Star className="h-4 w-4 text-yellow-400 fill-current" />
               <span className="text-white ml-1">{pkg.rating}</span>
-              <span className="text-xs text-green-300 ml-2">{pkg.comparedToUS}</span>
+              <span className="text-xs text-green-300 ml-2">
+                {pkg.comparedToUS}
+              </span>
             </div>
 
             <div className="mt-4">
               <p className="text-xs text-green-300 mb-2">Package includes:</p>
               <ul className="space-y-1">
                 {pkg.includes.map((item, idx) => (
-                  <li key={idx} className="text-sm text-white flex items-center">
+                  <li
+                    key={idx}
+                    className="text-sm text-white flex items-center"
+                  >
                     <CheckCircle className="h-3 w-3 text-emerald-400 mr-2" />
                     {item}
                   </li>
@@ -878,12 +1035,17 @@ const RehabStatusTab = ({ referrals }) => (
 
     {referrals.length > 0 ? (
       referrals.map((referral) => (
-        <div key={referral.id} className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-6">
+        <div
+          key={referral.id}
+          className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-6"
+        >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Progress Section */}
             <div className="lg:col-span-2">
-              <h3 className="text-lg font-semibold text-white mb-4">{referral.rehabCenter}</h3>
-              
+              <h3 className="text-lg font-semibold text-white mb-4">
+                {referral.rehabCenter}
+              </h3>
+
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-sm text-green-200 mb-1">
@@ -891,7 +1053,7 @@ const RehabStatusTab = ({ referrals }) => (
                     <span>{referral.progress}%</span>
                   </div>
                   <div className="w-full bg-white/20 rounded-full h-3">
-                    <div 
+                    <div
                       className="bg-emerald-500 h-3 rounded-full transition-all duration-500"
                       style={{ width: `${referral.progress}%` }}
                     />
@@ -901,27 +1063,40 @@ const RehabStatusTab = ({ referrals }) => (
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-green-300">Surgery Type</p>
-                    <p className="text-white font-medium">{referral.surgeryType}</p>
+                    <p className="text-white font-medium">
+                      {referral.surgeryType}
+                    </p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-green-300">Surgery Date</p>
-                    <p className="text-white font-medium">{referral.surgeryDate}</p>
+                    <p className="text-white font-medium">
+                      {referral.surgeryDate}
+                    </p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
                     <p className="text-xs text-green-300">Rehab Started</p>
-                    <p className="text-white font-medium">{referral.startDate}</p>
+                    <p className="text-white font-medium">
+                      {referral.startDate}
+                    </p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-3">
-                    <p className="text-xs text-green-300">Expected Completion</p>
+                    <p className="text-xs text-green-300">
+                      Expected Completion
+                    </p>
                     <p className="text-white font-medium">
-                      {new Date(new Date(referral.startDate).getTime() + 14*24*60*60*1000).toLocaleDateString()}
+                      {new Date(
+                        new Date(referral.startDate).getTime() +
+                          14 * 24 * 60 * 60 * 1000,
+                      ).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
 
                 {/* Daily Schedule */}
                 <div className="mt-4">
-                  <h4 className="text-md font-medium text-white mb-3">Today's Schedule</h4>
+                  <h4 className="text-md font-medium text-white mb-3">
+                    Today's Schedule
+                  </h4>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
                       <div>
@@ -933,7 +1108,9 @@ const RehabStatusTab = ({ referrals }) => (
                     <div className="flex items-center justify-between bg-white/5 rounded-lg p-3">
                       <div>
                         <p className="text-white">Cardiac Exercise</p>
-                        <p className="text-xs text-green-300">with Nurse Mary</p>
+                        <p className="text-xs text-green-300">
+                          with Nurse Mary
+                        </p>
                       </div>
                       <span className="text-sm text-emerald-300">2:00 PM</span>
                     </div>
@@ -952,7 +1129,9 @@ const RehabStatusTab = ({ referrals }) => (
             {/* Contact & Info */}
             <div className="lg:col-span-1">
               <div className="bg-white/5 rounded-lg p-4">
-                <h4 className="text-white font-medium mb-3">Rehab Coordinator</h4>
+                <h4 className="text-white font-medium mb-3">
+                  Rehab Coordinator
+                </h4>
                 <div className="space-y-3">
                   <div className="flex items-center">
                     <User className="h-4 w-4 text-emerald-400 mr-2" />
@@ -981,8 +1160,12 @@ const RehabStatusTab = ({ referrals }) => (
     ) : (
       <div className="bg-white/10 backdrop-blur-md rounded-xl border border-white/20 p-12 text-center">
         <Activity className="h-16 w-16 text-green-300 mx-auto mb-4" />
-        <h3 className="text-xl font-medium text-white mb-2">No Active Rehabilitation</h3>
-        <p className="text-green-200">Your rehab information will appear here when assigned</p>
+        <h3 className="text-xl font-medium text-white mb-2">
+          No Active Rehabilitation
+        </h3>
+        <p className="text-green-200">
+          Your rehab information will appear here when assigned
+        </p>
       </div>
     )}
   </div>
@@ -999,19 +1182,27 @@ const RecordsTab = ({ records, groupedRecords, viewType, setViewType }) => (
           Blockchain Secured
         </span>
       </h2>
-      
+
       <div className="relative">
         <select
           value={viewType}
           onChange={(e) => setViewType(e.target.value)}
           className="appearance-none bg-white/10 border border-emerald-300/30 text-white rounded-lg pl-4 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         >
-          <option value="table" className="bg-gray-800 text-white">Table View</option>
-          <option value="type" className="bg-gray-800 text-white">Group by Type</option>
+          <option value="table" className="bg-gray-800 text-white">
+            Table View
+          </option>
+          <option value="type" className="bg-gray-800 text-white">
+            Group by Type
+          </option>
         </select>
         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-white">
-          <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+          <svg
+            className="fill-current h-4 w-4"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 20 20"
+          >
+            <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
           </svg>
         </div>
       </div>
@@ -1021,7 +1212,9 @@ const RecordsTab = ({ records, groupedRecords, viewType, setViewType }) => (
       {records.length === 0 ? (
         <div className="text-center py-8">
           <FileText className="mx-auto h-12 w-12 text-green-200" />
-          <h3 className="mt-2 text-lg font-medium text-white">No medical records found</h3>
+          <h3 className="mt-2 text-lg font-medium text-white">
+            No medical records found
+          </h3>
           <p className="mt-1 text-sm text-green-200">
             Your uploaded documents will appear here
           </p>
@@ -1041,16 +1234,28 @@ const TableView = ({ records }) => (
     <table className="min-w-full divide-y divide-green-300/20">
       <thead className="bg-white/5">
         <tr>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider">
+          <th
+            scope="col"
+            className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider"
+          >
             #
           </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider">
+          <th
+            scope="col"
+            className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider"
+          >
             File Name
           </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider">
+          <th
+            scope="col"
+            className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider"
+          >
             File Type
           </th>
-          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider">
+          <th
+            scope="col"
+            className="px-6 py-3 text-left text-xs font-medium text-green-200 uppercase tracking-wider"
+          >
             Action
           </th>
         </tr>
@@ -1076,9 +1281,24 @@ const TableView = ({ records }) => (
                 rel="noopener noreferrer"
                 className="text-emerald-400 hover:text-emerald-300 hover:underline flex items-center"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
                 </svg>
                 View
               </a>
@@ -1093,7 +1313,10 @@ const TableView = ({ records }) => (
 const AccordionView = ({ groupedRecords }) => (
   <div className="space-y-3">
     {Object.keys(groupedRecords).map((fileType, i) => (
-      <div key={i} className="border border-emerald-300/20 rounded-lg overflow-hidden">
+      <div
+        key={i}
+        className="border border-emerald-300/20 rounded-lg overflow-hidden"
+      >
         <div className="bg-emerald-900/30 px-4 py-3 flex justify-between items-center cursor-pointer">
           <h3 className="text-sm font-medium text-white">{fileType}</h3>
           <span className="text-xs bg-emerald-800/50 text-emerald-300 px-2 py-1 rounded-full">
@@ -1102,7 +1325,10 @@ const AccordionView = ({ groupedRecords }) => (
         </div>
         <div className="bg-white/5 divide-y divide-emerald-300/10">
           {groupedRecords[fileType].map((record, index) => (
-            <div key={index} className="px-4 py-3 flex justify-between items-center hover:bg-white/10 transition-colors">
+            <div
+              key={index}
+              className="px-4 py-3 flex justify-between items-center hover:bg-white/10 transition-colors"
+            >
               <span className="text-sm text-green-100">{record.fileName}</span>
               <a
                 href={`${import.meta.env.VITE_PINATA_LINK}${record.ipfsHash}`}
@@ -1110,8 +1336,18 @@ const AccordionView = ({ groupedRecords }) => (
                 rel="noopener noreferrer"
                 className="text-emerald-400 hover:text-emerald-300 text-sm flex items-center"
               >
-                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
                 </svg>
                 Download
               </a>

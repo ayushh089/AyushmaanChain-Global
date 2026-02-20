@@ -25,14 +25,14 @@ const Login = () => {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const accounts = await provider.send("eth_requestAccounts", []);
       console.log(accounts);
-      
+
       const walletAddress = accounts[0];
 
       // Step 2: Get challenge from backend
       setStatus("Requesting challenge...");
       const challengeResponse = await axios.get(
         `${import.meta.env.VITE_BACKENDLINK}/challenge`,
-        { params: { walletAddress } }
+        { params: { walletAddress } },
       );
       const challengeMessage = challengeResponse.data.challenge;
 
@@ -43,17 +43,22 @@ const Login = () => {
 
       // Step 4: Authenticate
       setStatus("Authenticating...");
-      console.log("Authenticating...", { walletAddress, challengeMessage, signature });
+      console.log("Authenticating...", {
+        walletAddress,
+        challengeMessage,
+        signature,
+      });
       const loginResponse = await axios.post(
         `${import.meta.env.VITE_BACKENDLINK}/login`,
-        { walletAddress, challengeMessage, signature }
+        { walletAddress, challengeMessage, signature },
       );
-console.log("Login response:", loginResponse.data);
+      console.log("Login response:", loginResponse.data);
       const userData = loginResponse.data.profile.rows[0];
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
-      navigate("/homepage");
-
+      navigate(
+        userData.role === "patient" ? "/patient/dashboard" : "/homepage",
+      );
     } catch (error) {
       console.error("Login failed:", error);
       alert(`Login failed! ${error.response?.data?.message || error.message}`);
@@ -73,15 +78,17 @@ console.log("Login response:", loginResponse.data);
             transition={{ duration: 0.5 }}
             className="w-full md:w-1/2 bg-white p-8 rounded-xl shadow-lg text-center"
           >
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Login with MetaMask</h2>
-            
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">
+              Login with MetaMask
+            </h2>
+
             <button
               onClick={handleLogin}
               disabled={loading}
               className={`w-full py-3 px-4 rounded-lg font-medium transition-colors flex items-center justify-center ${
                 loading
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
+                  ? "bg-gray-300 cursor-not-allowed"
+                  : "bg-green-600 hover:bg-green-700 text-white"
               }`}
             >
               {loading ? status : "Connect Wallet"}

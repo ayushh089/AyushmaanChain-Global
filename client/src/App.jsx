@@ -1,4 +1,9 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Signup from "./Pages/Signup";
 import Login from "./Pages/Login";
 import HomePage from "./Pages/HomePage";
@@ -46,22 +51,56 @@ function MainContent() {
     <Routes>
       <Route
         path="/"
-        element={user ? <Navigate to="/homepage" replace /> : <AyushmaanChainLanding />}
+        element={
+          user ? (
+            user.role === "patient" ? (
+              <Navigate to="/patient/dashboard" replace />
+            ) : (
+              <Navigate to="/homepage" replace />
+            )
+          ) : (
+            <AyushmaanChainLanding />
+          )
+        }
       />
 
       <Route path="/signup" element={<Signup />} />
       <Route path="/login" element={<Login />} />
 
       {user && (
-        <Route
-          path="/*"
-          element={
-            <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 p-6">
-              <Navbar />
-              <Routes>
-                <Route path="/homepage" element={<Layout><HomePage /></Layout>} />
+        <Route path="/*" element={<AuthenticatedRoutes user={user} />} />
+      )}
 
-                {/* Patient Routes */}
+      {/* Fallback for logged-out */}
+      {!user && <Route path="*" element={<Navigate to="/" replace />} />}
+    </Routes>
+  );
+}
+
+function AuthenticatedRoutes({ user }) {
+  const isPatient = user.role === "patient";
+
+  return (
+    <Routes>
+      {isPatient && (
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
+      )}
+
+      <Route
+        path="/*"
+        element={
+          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 p-6">
+            <Navbar />
+            <Routes>
+              <Route
+                path="/homepage"
+                element={
+                  <Layout>
+                    <HomePage />
+                  </Layout>
+                }
+              />
+
                 {user.role === "patient" && (
                   <Route path="/patient" element={<Layout />}>
                     <Route index element={<Navigate to="dashboard" replace />} />
@@ -74,7 +113,6 @@ function MainContent() {
                   </Route>
                 )}
 
-                {/* Doctor Routes */}
                 {user.role === "doctor" && (
                   <Route path="/doctor" element={<DoctorLayout />}>
                     <Route index element={<Navigate to="patient-manager" replace />} />
@@ -82,7 +120,6 @@ function MainContent() {
                   </Route>
                 )}
 
-                {/* Pharmacist Routes */}
                 {user.role === "pharmacist" && (
                   <Route path="/pharmacist" element={<PharmacistLayout />}>
                     <Route index element={<Navigate to="verify" replace />} />
@@ -91,7 +128,6 @@ function MainContent() {
                   </Route>
                 )}
 
-                {/* Admin Routes */}
                 {user.role === "admin" && (
                   <Route path="/admin" element={<AdminLayout />}>
                     <Route index element={<Navigate to="assign-role" replace />} />
@@ -99,7 +135,6 @@ function MainContent() {
                   </Route>
                 )}
 
-                {/* Manufacturer Routes */}
                 {user.role === "manufacturer" && (
                   <Route path="/manufacturer" element={<ManufacturerLayout />}>
                     <Route index element={<Navigate to="create-drug" replace />} />
@@ -109,24 +144,19 @@ function MainContent() {
                   </Route>
                 )}
 
-                {/* Hospital Routes */}
-                {user.role === "hospital" && (
-                  <Route path="/hospital" element={<HospitalLayout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<HospitalDashboard />} />
-                    {/* Add more hospital routes here as needed */}
-                  </Route>
-                )}
-
-                <Route path="*" element={<Navigate to="/homepage" replace />} />
-              </Routes>
-            </div>
-          }
-        />
-      )}
-
-      {/* Fallback for logged-out */}
-      {!user && <Route path="*" element={<Navigate to="/" replace />} />}
+              <Route
+                path="*"
+                element={
+                  <Navigate
+                    to={isPatient ? "/patient/dashboard" : "/homepage"}
+                    replace
+                  />
+                }
+              />
+            </Routes>
+          </div>
+        }
+      />
     </Routes>
   );
 }
