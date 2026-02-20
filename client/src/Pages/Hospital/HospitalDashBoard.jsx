@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Header from "./Header";
-import Sidebar from "./Sidebar";
 import DashboardStats from "./DashboardStats";
 import PackageTab from "./PackageTab";
 import RequestTab from "./RequestTab";
@@ -8,19 +7,15 @@ import PatientTab from "./PatientTab";
 import AppointmentTab from "./AppointmentTab";
 import DoctorTab from "./DoctorTab";
 import {
-  Menu, X, Bell, User,
-  Package, Calendar, Users,
-  Stethoscope, FileText, Home,
-  Activity, Heart, Award,
-  ChevronDown, MoreVertical
+  Home, Package, FileText, Users,
+  Calendar, Stethoscope
 } from 'lucide-react';
 
 const HospitalDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
 
   // Hospital Info
-  const [hospitalInfo, setHospitalInfo] = useState({
+  const [hospitalInfo] = useState({
     id: 1,
     name: "XYZ Heart Institute",
     location: "Nairobi, Kenya",
@@ -309,86 +304,72 @@ const HospitalDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      {/* Sidebar */}
-      <Sidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        tabs={tabs}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-green-900">
+      {/* Header with integrated tabs - Sidebar removed */}
+      <Header 
         hospitalInfo={hospitalInfo}
+        activeTab={activeTab}
+        tabs={tabs}
+        setActiveTab={setActiveTab}
       />
 
-      {/* Main Content */}
-      <div className="lg:pl-64">
-        {/* Header */}
-        <Header 
-          setSidebarOpen={setSidebarOpen}
-          hospitalInfo={hospitalInfo}
-          activeTab={activeTab}
-          tabs={tabs}
-          setActiveTab={setActiveTab}
-        />
+      {/* Main Content Area - No left padding since sidebar is removed */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === "dashboard" && (
+          <DashboardStats 
+            stats={stats}
+            hospitalInfo={hospitalInfo}
+            packages={packages}
+            requests={packageRequests}
+            appointments={appointments}
+            patients={patients}
+            doctors={doctors}
+          />
+        )}
 
-        {/* Main Content Area */}
-        <main className="p-6">
-          {activeTab === "dashboard" && (
-            <DashboardStats 
-              stats={stats}
-              hospitalInfo={hospitalInfo}
-              packages={packages}
-              requests={packageRequests}
-              appointments={appointments}
-              patients={patients}
-              doctors={doctors}
-            />
-          )}
+        {activeTab === "packages" && (
+          <PackageTab 
+            packages={packages}
+            setPackages={setPackages}
+            doctors={doctors}
+          />
+        )}
 
-          {activeTab === "packages" && (
-            <PackageTab 
-              packages={packages}
-              setPackages={setPackages}
-              doctors={doctors}
-            />
-          )}
+        {activeTab === "requests" && (
+          <RequestTab 
+            requests={packageRequests}
+            setRequests={setPackageRequests}
+            patients={patients}
+            packages={packages}
+          />
+        )}
 
-          {activeTab === "requests" && (
-            <RequestTab 
-              requests={packageRequests}
-              setRequests={setPackageRequests}
-              patients={patients}
-              packages={packages}
-            />
-          )}
+        {activeTab === "patients" && (
+          <PatientTab 
+            patients={patients}
+            setPatients={setPatients}
+            doctors={doctors}
+            packages={packages}
+          />
+        )}
 
-          {activeTab === "patients" && (
-            <PatientTab 
-              patients={patients}
-              setPatients={setPatients}
-              doctors={doctors}
-              packages={packages}
-            />
-          )}
+        {activeTab === "appointments" && (
+          <AppointmentTab 
+            appointments={appointments}
+            setAppointments={setAppointments}
+            patients={patients}
+            doctors={doctors}
+          />
+        )}
 
-          {activeTab === "appointments" && (
-            <AppointmentTab 
-              appointments={appointments}
-              setAppointments={setAppointments}
-              patients={patients}
-              doctors={doctors}
-            />
-          )}
-
-          {activeTab === "doctors" && (
-            <DoctorTab 
-              doctors={doctors}
-              setDoctors={setDoctors}
-              patients={patients}
-            />
-          )}
-        </main>
-      </div>
+        {activeTab === "doctors" && (
+          <DoctorTab 
+            doctors={doctors}
+            setDoctors={setDoctors}
+            patients={patients}
+          />
+        )}
+      </main>
     </div>
   );
 };

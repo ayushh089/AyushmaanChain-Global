@@ -28,10 +28,8 @@ import CreateDrug from "./Pages/Manufacturer/CreateDrug";
 import DrugInventory from "./Pages/Manufacturer/DrugInventory";
 import VerifyDrug from "./Pages/Manufacturer/VerifyDrug";
 import AyushmaanChainLanding from "./Pages/AyushmaanChainLanding";
-
-// Hospital Imports
 import HospitalLayout from "./Components/HospitalLayout";
-import HospitalDashboard from "./Pages/Hospital/HospitalDashBoard";
+import HospitalDashboard from "./Pages/Hospital/HospitalDashBoard"; // ⚠️ IMPORT MISSING THA
 
 function App() {
   return (
@@ -55,6 +53,8 @@ function MainContent() {
           user ? (
             user.role === "patient" ? (
               <Navigate to="/patient/dashboard" replace />
+            ) : user.role === "distributor" ? (
+              <Navigate to="/distributor/dashboard" replace />
             ) : (
               <Navigate to="/homepage" replace />
             )
@@ -79,11 +79,16 @@ function MainContent() {
 
 function AuthenticatedRoutes({ user }) {
   const isPatient = user.role === "patient";
+  const isDistributor = user.role === "distributor";
 
   return (
     <Routes>
       {isPatient && (
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
+      )}
+
+      {isDistributor && (
+        <Route path="/distributor/dashboard" element={<HospitalDashboard />} />
       )}
 
       <Route
@@ -101,54 +106,78 @@ function AuthenticatedRoutes({ user }) {
                 }
               />
 
-                {user.role === "patient" && (
-                  <Route path="/patient" element={<Layout />}>
-                    <Route index element={<Navigate to="dashboard" replace />} />
-                    <Route path="dashboard" element={<PatientDashboard />} />
-                    <Route path="medical-records" element={<MedicalRecords />} />
-                    <Route path="grant-access" element={<GrantAccess />} />
-                    <Route path="revoke-access" element={<RevokeAccess />} />
-                    <Route path="my-doctors" element={<MyDoctors />} />
-                    <Route path="prescription" element={<Prescription />} />
-                  </Route>
-                )}
+              {/* Patient Routes */}
+              {isPatient && (
+                <Route path="/patient/*" element={<Layout />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<PatientDashboard />} />
+                  <Route path="medical-records" element={<MedicalRecords />} />
+                  <Route path="grant-access" element={<GrantAccess />} />
+                  <Route path="revoke-access" element={<RevokeAccess />} />
+                  <Route path="my-doctors" element={<MyDoctors />} />
+                  <Route path="prescription" element={<Prescription />} />
+                </Route>
+              )}
 
-                {user.role === "doctor" && (
-                  <Route path="/doctor" element={<DoctorLayout />}>
-                    <Route index element={<Navigate to="patient-manager" replace />} />
-                    <Route path="patient-manager" element={<PatientManager />} />
-                  </Route>
-                )}
+              {/* Doctor Routes */}
+              {user.role === "doctor" && (
+                <Route path="/doctor/*" element={<DoctorLayout />}>
+                  <Route index element={<Navigate to="patient-manager" replace />} />
+                  <Route path="patient-manager" element={<PatientManager />} />
+                </Route>
+              )}
 
-                {user.role === "pharmacist" && (
-                  <Route path="/pharmacist" element={<PharmacistLayout />}>
-                    <Route index element={<Navigate to="verify" replace />} />
-                    <Route path="verify" element={<Verification />} />
-                    <Route path="dispensed" element={<Dispensed />} />
-                  </Route>
-                )}
+              {/* Pharmacist Routes */}
+              {user.role === "pharmacist" && (
+                <Route path="/pharmacist/*" element={<PharmacistLayout />}>
+                  <Route index element={<Navigate to="verify" replace />} />
+                  <Route path="verify" element={<Verification />} />
+                  <Route path="dispensed" element={<Dispensed />} />
+                </Route>
+              )}
 
-                {user.role === "admin" && (
-                  <Route path="/admin" element={<AdminLayout />}>
-                    <Route index element={<Navigate to="assign-role" replace />} />
-                    <Route path="assign-role" element={<AssignRole />} />
-                  </Route>
-                )}
+              {/* Admin Routes */}
+              {user.role === "admin" && (
+                <Route path="/admin/*" element={<AdminLayout />}>
+                  <Route index element={<Navigate to="assign-role" replace />} />
+                  <Route path="assign-role" element={<AssignRole />} />
+                </Route>
+              )}
 
-                {user.role === "manufacturer" && (
-                  <Route path="/manufacturer" element={<ManufacturerLayout />}>
-                    <Route index element={<Navigate to="create-drug" replace />} />
-                    <Route path="create-drug" element={<CreateDrug />} />
-                    <Route path="drug-inventory" element={<DrugInventory />} />
-                    <Route path="verify-drug" element={<VerifyDrug />} />
-                  </Route>
-                )}
+              {/* Manufacturer Routes */}
+              {user.role === "manufacturer" && (
+                <Route path="/manufacturer/*" element={<ManufacturerLayout />}>
+                  <Route index element={<Navigate to="create-drug" replace />} />
+                  <Route path="create-drug" element={<CreateDrug />} />
+                  <Route path="drug-inventory" element={<DrugInventory />} />
+                  <Route path="verify-drug" element={<VerifyDrug />} />
+                </Route>
+              )}
 
+              {/* Distributor/Hospital Routes */}
+              {user.role === "distributor" && (
+                <Route path="/distributor/*" element={
+                  <HospitalLayout>
+                    <Routes>
+                      <Route path="dashboard" element={<HospitalDashboard />} />
+                      <Route path="*" element={<Navigate to="dashboard" replace />} />
+                    </Routes>
+                  </HospitalLayout>
+                } />
+              )}
+
+              {/* Default Redirect */}
               <Route
                 path="*"
                 element={
                   <Navigate
-                    to={isPatient ? "/patient/dashboard" : "/homepage"}
+                    to={
+                      isPatient 
+                        ? "/patient/dashboard" 
+                        : isDistributor 
+                        ? "/distributor/dashboard" 
+                        : "/homepage"
+                    }
                     replace
                   />
                 }
