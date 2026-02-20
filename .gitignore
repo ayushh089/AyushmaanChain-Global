@@ -4,9 +4,7 @@ cache/
 build/
 
 # Private keys & secrets
-.env
-.env.local
-.env.production
+
 secrets.json
 *.key
 
