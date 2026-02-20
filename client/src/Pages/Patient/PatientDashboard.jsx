@@ -123,7 +123,9 @@ const PatientDashboard = () => {
     e.preventDefault();
 
     if (!selectedFile || !fileType || !fileName) {
-      showErrorToast("Please select a file, enter a file name, and choose a file type.");
+      showErrorToast(
+        "Please select a file, enter a file name, and choose a file type.",
+      );
       return;
     }
 
@@ -141,7 +143,7 @@ const PatientDashboard = () => {
         {
           method: "POST",
           body: formData,
-        }
+        },
       );
 
       if (!response.ok) {
@@ -158,17 +160,17 @@ const PatientDashboard = () => {
         fileName,
         fileType,
         data.IpfsHash,
-        shaHashBytes32
+        shaHashBytes32,
       );
       await tx.wait();
-      
+
       showSuccessToast("Medical record uploaded successfully!");
-      
+
       // Reset form
       setSelectedFile(null);
       setFileName("");
       setFileType("");
-      
+
       // Refresh records
       const result = await contract.getRecords(account);
       const formattedRecords = result.map((record) => ({
@@ -180,7 +182,7 @@ const PatientDashboard = () => {
         isShared: record[5],
       }));
       setRecords(formattedRecords);
-      
+
       // Switch to records tab
       setActiveTab("records");
     } catch (error) {
@@ -438,11 +440,11 @@ const PatientDashboard = () => {
                 </span>
               </div>
               <div className="flex items-center space-x-4">
-                <Bell className="h-5 w-5 text-green-200 cursor-pointer hover:text-white" />
+                {/* Wallet Address */}
                 <div className="hidden md:flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20 hover:bg-white/20 transition-all duration-300">
                   <span className="text-sm text-white font-medium">
-                    {user?.wallet_address?.slice(0, 6)}...
-                    {user?.wallet_address?.slice(-4)}
+                    {user.wallet_address.slice(0, 6)}...
+                    {user.wallet_address.slice(-4)}
                   </span>
                   <button
                     onClick={handleCopy}
@@ -452,21 +454,36 @@ const PatientDashboard = () => {
                     {copied ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
+
+                {/* User Profile */}
+                <div className="flex items-center space-x-3">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-xs text-green-200 capitalize font-medium">
+                      {user.role}
+                    </p>
+                    <p className="text-sm font-semibold text-white">
+                      {user.name}
+                    </p>
                   </div>
-                  <span className="text-sm text-green-100 hidden sm:inline">
-                    {profile.name}
-                  </span>
+
+                  <div className="relative">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${user.name}&background=ffffff&color=2563eb&length=1&unique=${user.wallet_address}`}
+                      alt="Avatar"
+                      className="rounded-full w-10 h-10 border-2 border-white shadow-lg"
+                    />
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                  </div>
+
+                  {/* Logout Button */}
+                  <button
+                    onClick={handleLogout}
+                    className="hidden sm:flex items-center space-x-2 bg-white/10 hover:bg-red-500/20 text-white px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 border border-white/20"
+                  >
+                    <LogOut size={16} />
+                    <span>Logout</span>
+                  </button>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  className="hidden sm:flex items-center space-x-2 bg-white/10 hover:bg-red-500/20 text-white px-3 py-2 rounded-xl text-sm font-semibold transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105 border border-white/20"
-                >
-                  <LogOut size={16} />
-                  <span>Logout</span>
-                </button>
               </div>
             </div>
           </div>
@@ -582,7 +599,13 @@ const PatientDashboard = () => {
 };
 
 // Overview Tab
-const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals, setActiveTab }) => (
+const OverviewTab = ({
+  profile,
+  records,
+  surgeryPackages,
+  rehabReferrals,
+  setActiveTab,
+}) => (
   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {/* Left Column */}
     <div className="lg:col-span-2 space-y-6">
@@ -595,28 +618,28 @@ const OverviewTab = ({ profile, records, surgeryPackages, rehabReferrals, setAct
 
         {/* Quick Actions */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-          <button 
+          <button
             onClick={() => setActiveTab("explore")}
             className="flex flex-col items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
           >
             <Hospital className="h-5 w-5 text-emerald-400 mb-1" />
             <span className="text-xs text-white">Find Hospital</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("packages")}
             className="flex flex-col items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
           >
             <Package className="h-5 w-5 text-emerald-400 mb-1" />
             <span className="text-xs text-white">View Packages</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("upload")}
             className="flex flex-col items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
           >
             <FileText className="h-5 w-5 text-emerald-400 mb-1" />
             <span className="text-xs text-white">Upload Record</span>
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab("rehab")}
             className="flex flex-col items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors"
           >
@@ -1352,7 +1375,9 @@ const UploadRecordTab = ({
           <Upload className="h-6 w-6 mr-2 text-emerald-400" />
           Upload Medical Record
         </h2>
-        <p className="text-green-200">Securely upload your medical documents to the blockchain</p>
+        <p className="text-green-200">
+          Securely upload your medical documents to the blockchain
+        </p>
       </div>
 
       <form onSubmit={handleUploadSubmit} className="space-y-6">
@@ -1403,7 +1428,8 @@ const UploadRecordTab = ({
             <div className="mt-3 p-3 bg-emerald-600/20 rounded-lg border border-emerald-400/30">
               <p className="text-sm text-white flex items-center">
                 <FileText className="h-4 w-4 mr-2 text-emerald-400" />
-                Selected: <span className="font-medium ml-1">{selectedFile.name}</span>
+                Selected:{" "}
+                <span className="font-medium ml-1">{selectedFile.name}</span>
               </p>
             </div>
           )}
@@ -1411,7 +1437,10 @@ const UploadRecordTab = ({
 
         {/* File Name */}
         <div>
-          <label htmlFor="filename" className="block text-sm font-medium text-green-100 mb-2">
+          <label
+            htmlFor="filename"
+            className="block text-sm font-medium text-green-100 mb-2"
+          >
             File Name
           </label>
           <input
@@ -1427,7 +1456,10 @@ const UploadRecordTab = ({
 
         {/* File Type */}
         <div>
-          <label htmlFor="filetype" className="block text-sm font-medium text-green-100 mb-2">
+          <label
+            htmlFor="filetype"
+            className="block text-sm font-medium text-green-100 mb-2"
+          >
             Document Type
           </label>
           <select
@@ -1441,7 +1473,11 @@ const UploadRecordTab = ({
               Select document type
             </option>
             {fileTypes.map((type, index) => (
-              <option key={index} value={type} className="text-gray-800 bg-white">
+              <option
+                key={index}
+                value={type}
+                className="text-gray-800 bg-white"
+              >
                 {type}
               </option>
             ))}
