@@ -55,10 +55,17 @@ const Login = () => {
       console.log("Login response:", loginResponse.data);
       const userData = loginResponse.data.profile.rows[0];
       setUser(userData);
+
       localStorage.setItem("user", JSON.stringify(userData));
-      navigate(
-        userData.role === "patient" ? "/patient/dashboard" : "/homepage",
-      );
+      let redirectPath = "/homepage";
+
+      if (userData.role === "patient") {
+        redirectPath = "/patient/dashboard";
+      } else if (userData.role === "hospital") {
+        redirectPath = "/hospital/dashboard";
+      }
+
+      navigate(redirectPath);
     } catch (error) {
       console.error("Login failed:", error);
       alert(`Login failed! ${error.response?.data?.message || error.message}`);

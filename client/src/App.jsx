@@ -79,7 +79,7 @@ function MainContent() {
 
 function AuthenticatedRoutes({ user }) {
   const isPatient = user.role === "patient";
-  const isDistributor = user.role === "distributor";
+  const isHospital = user.role === "hospital";
 
   return (
     <Routes>
@@ -87,8 +87,8 @@ function AuthenticatedRoutes({ user }) {
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
       )}
 
-      {isDistributor && (
-        <Route path="/distributor/dashboard" element={<HospitalDashboard />} />
+      {isHospital && (
+        <Route path="/hospital/dashboard" element={<HospitalDashboard />} />
       )}
 
       <Route
@@ -154,7 +154,7 @@ function AuthenticatedRoutes({ user }) {
                 </Route>
               )}
 
-              {/* Distributor/Hospital Routes */}
+              {/* Hospital/Hospital Routes */}
               {user.role === "distributor" && (
                 <Route path="/distributor/*" element={
                   <HospitalLayout>
@@ -174,7 +174,7 @@ function AuthenticatedRoutes({ user }) {
                     to={
                       isPatient 
                         ? "/patient/dashboard" 
-                        : isDistributor 
+                        : isHospital 
                         ? "/distributor/dashboard" 
                         : "/homepage"
                     }

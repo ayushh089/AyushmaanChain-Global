@@ -14,7 +14,7 @@ const registrationHandler = async (req, res) => {
         .json({ msg: "Missing required fields" });
     }
 
-    const validRoles = ["patient", "doctor", "admin", "pharmacist","admin","manufacturer","distributor"];
+    const validRoles = ["patient", "doctor", "admin", "pharmacist","admin","manufacturer","hospital"];
     if (!validRoles.includes(payload.role)) {
       console.log("Invalid role:", payload.role);
 
