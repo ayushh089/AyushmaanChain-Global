@@ -64,6 +64,9 @@ const Login = () => {
       } else if (userData.role === "hospital") {
         redirectPath = "/hospital/dashboard";
       }
+      else if (userData.role === "doctor") {
+        redirectPath = "/doctor/dashboard";
+      }
 
       navigate(redirectPath);
     } catch (error) {

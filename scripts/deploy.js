@@ -20,6 +20,7 @@ async function main() {
   const InsuranceClaimRegistry = await hre.ethers.getContractFactory("InsuranceClaimRegistry");
   const RehabReferralRegistry = await hre.ethers.getContractFactory("RehabReferralRegistry");
   const TreatmentRegistry = await hre.ethers.getContractFactory("TreatmentRegistry");
+  const ServiceRequestRegistry = await hre.ethers.getContractFactory("ServiceRequestRegistry");
   
   
   const medicalRecords = await MedicalRecords.deploy(userRegistryAddress);
@@ -30,6 +31,7 @@ async function main() {
   const insuranceClaimRegistry = await InsuranceClaimRegistry.deploy();
   const rehabReferralRegistry = await RehabReferralRegistry.deploy();
   const treatmentRegistry = await TreatmentRegistry.deploy();
+  const serviceRequestRegistry = await ServiceRequestRegistry.deploy();
 
   await Promise.all([
     medicalRecords.waitForDeployment(),
@@ -39,7 +41,8 @@ async function main() {
     hospitalPackageRegistry.waitForDeployment(),
     insuranceClaimRegistry.waitForDeployment(),
     rehabReferralRegistry.waitForDeployment(),
-    treatmentRegistry.waitForDeployment()
+    treatmentRegistry.waitForDeployment(),
+    serviceRequestRegistry.waitForDeployment()
   ]);
 
   console.log(`=> MedicalRecords deployed at: ${await medicalRecords.getAddress()}`);
@@ -50,7 +53,7 @@ async function main() {
   console.log(`=> InsuranceClaimRegistry deployed at: ${await insuranceClaimRegistry.getAddress()}`);
   console.log(`=> RehabReferralRegistry deployed at: ${await rehabReferralRegistry.getAddress()}`);
   console.log(`=> TreatmentRegistry deployed at: ${await treatmentRegistry.getAddress()}`);
-
+  console.log(`=> ServiceRequestRegistry deployed at: ${await serviceRequestRegistry.getAddress()}`);
   console.log("All contracts deployed successfully!");
 }
 

@@ -17,8 +17,14 @@ import SurgeryPackagesTab from "./SurgeryPackagesTab";
 import RehabStatusTab from "./RehabStatusTab";
 import UploadRecordTab from "./UploadRecordTab";
 import RecordsTab from "./RecordsTab";
+import useFetchHospitals from "../../hooks/useFetchHospitals";
 
 const PatientDashboard = () => {
+  const { hospitals, loading } = useFetchHospitals();
+  console.log("Fetching.... ",hospitals);
+  
+  const [selectedHospital, setSelectedHospital] = useState(null);
+  
   const [records, setRecords] = useState([]);
   const [viewType, setViewType] = useState("table");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -33,6 +39,8 @@ const PatientDashboard = () => {
   const [fileName, setFileName] = useState("");
   const [fileType, setFileType] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSpecialty, setFilterSpecialty] = useState("all");
 
   const fileTypes = [
     "Blood Test Report",
@@ -193,7 +201,7 @@ const PatientDashboard = () => {
     ],
   });
 
-  const [exploreHospitals, setExploreHospitals] = useState([
+  const [exploreHospitals] = useState([
     {
       id: 1,
       name: "XYZ Heart Institute",
@@ -239,7 +247,7 @@ const PatientDashboard = () => {
     },
   ]);
 
-  const [surgeryPackages, setSurgeryPackages] = useState([
+  const [surgeryPackages] = useState([
     {
       id: 1,
       name: "Cardiac Bypass Surgery",
@@ -284,7 +292,7 @@ const PatientDashboard = () => {
     },
   ]);
 
-  const [rehabReferrals, setRehabReferrals] = useState([
+  const [rehabReferrals] = useState([
     {
       id: 1,
       patientName: "John Doe",
@@ -301,28 +309,24 @@ const PatientDashboard = () => {
     },
   ]);
 
-  const [selectedHospital, setSelectedHospital] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterSpecialty, setFilterSpecialty] = useState("all");
-
-  useEffect(() => {
-    const fetchRecords = async () => {
-      if (contract && contractUser) {
-        const isRegistered = await contractUser.isRegistered(accountUser);
-        const result = await contract.getRecords(account);
-        const formattedRecords = result.map((record) => ({
-          fileName: record[0],
-          fileType: record[1],
-          ipfsHash: record[2],
-          sha256Hash: record[3],
-          uploadedBy: record[4],
-          isShared: record[5],
-        }));
-        setRecords(formattedRecords);
-      }
-    };
-    fetchRecords();
-  }, [contract, account, accountUser, contractUser]);
+  // useEffect(() => {
+  //   const fetchRecords = async () => {
+  //     if (contract && contractUser) {
+  //       const isRegistered = await contractUser.isRegistered(accountUser);
+  //       const result = await contract.getRecords(account);
+  //       const formattedRecords = result.map((record) => ({
+  //         fileName: record[0],
+  //         fileType: record[1],
+  //         ipfsHash: record[2],
+  //         sha256Hash: record[3],
+  //         uploadedBy: record[4],
+  //         isShared: record[5],
+  //       }));
+  //       setRecords(formattedRecords);
+  //     }
+  //   };
+  //   fetchRecords();
+  // }, [contract, account, accountUser, contractUser]);
 
   const groupedRecords = records.reduce((acc, record) => {
     acc[record.fileType] = acc[record.fileType] || [];
@@ -330,10 +334,10 @@ const PatientDashboard = () => {
     return acc;
   }, {});
 
-  const filteredHospitals = exploreHospitals.filter(
+  const filteredHospitals = (hospitals || exploreHospitals).filter(
     (hospital) =>
       hospital.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      hospital.specialties.some((s) =>
+      hospital.specialties?.some((s) =>
         s.toLowerCase().includes(searchTerm.toLowerCase()),
       ),
   );
@@ -353,6 +357,14 @@ const PatientDashboard = () => {
     { id: "upload", label: "Upload Record", icon: "Upload" },
     { id: "records", label: "Medical Records", icon: "FileText" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading hospitals...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-emerald-900">
@@ -412,15 +424,14 @@ const PatientDashboard = () => {
               hospitals={filteredHospitals}
               selectedHospital={selectedHospital}
               setSelectedHospital={setSelectedHospital}
-              searchTerm={searchTerm}
-              filterSpecialty={filterSpecialty}
-              setFilterSpecialty={setFilterSpecialty}
             />
           )}
 
           {activeTab === "packages" && (
             <SurgeryPackagesTab packages={filteredPackages} />
           )}
+
+          
 
           {activeTab === "rehab" && (
             <RehabStatusTab referrals={rehabReferrals} />
