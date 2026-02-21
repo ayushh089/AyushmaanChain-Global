@@ -329,8 +329,6 @@ const HospitalDashboard = () => {
 
         {activeTab === "packages" && (
           <PackageTab 
-            packages={packages}
-            setPackages={setPackages}
             doctors={doctors}
           />
         )}

@@ -1,24 +1,34 @@
 import React, { useState, useEffect } from "react";
-import { X, Shield, RefreshCw, Package, Clock, DollarSign, Info } from "lucide-react";
+import {
+  X,
+  Shield,
+  RefreshCw,
+  Package,
+  Clock,
+  DollarSign,
+  Info,
+  CheckCircle,
+  XCircle,
+} from "lucide-react";
 import useHospitalPackageRegistry from "../../hooks/useHospitalPackageRegistry";
 
-const AddPackageModal = ({ onClose }) => {
+const AddPackageModal = ({ onClose, onSave, doctors = [] }) => {
   const { contract, account } = useHospitalPackageRegistry();
-  
+
   // States
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
-  const [view, setView] = useState('form'); // 'form' or 'list'
-  
+  const [view, setView] = useState("form"); // 'form' or 'list'
+
   // Form Data
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     duration: "",
     includes: "",
-    excludes: ""
+    excludes: "",
   });
 
   // Fetch packages from blockchain
@@ -41,7 +51,7 @@ const AddPackageModal = ({ onClose }) => {
       for (const id of packageIds) {
         try {
           const pkg = await contract.getPackage(id);
-          
+
           // Parse metadata (stored as JSON string)
           let metadata = {};
           try {
@@ -51,7 +61,7 @@ const AddPackageModal = ({ onClose }) => {
             metadata = {
               duration: "",
               includes: "",
-              excludes: ""
+              excludes: "",
             };
           }
 
@@ -63,7 +73,7 @@ const AddPackageModal = ({ onClose }) => {
             metadataHash: pkg.metadataHash,
             hospital: pkg.hospital,
             timestamp: new Date(Number(pkg.timestamp) * 1000).toLocaleString(),
-            ...metadata
+            ...metadata,
           });
         } catch (err) {
           console.error(`Error fetching package ${id}:`, err);
@@ -72,7 +82,6 @@ const AddPackageModal = ({ onClose }) => {
 
       console.log("Fetched packages:", packageDetails);
       setPackages(packageDetails);
-
     } catch (error) {
       console.error("Error fetching packages:", error);
       alert("Failed to fetch packages");
@@ -107,7 +116,7 @@ const AddPackageModal = ({ onClose }) => {
         includes: formData.includes,
         excludes: formData.excludes,
         hospital: account,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
 
       // Convert metadata to JSON string
@@ -117,7 +126,7 @@ const AddPackageModal = ({ onClose }) => {
         packageId,
         name: formData.name,
         price: formData.price,
-        metadataHash
+        metadataHash,
       });
 
       // Send transaction
@@ -125,7 +134,7 @@ const AddPackageModal = ({ onClose }) => {
         packageId,
         formData.name,
         Number(formData.price),
-        metadataHash
+        metadataHash,
       );
 
       console.log("TX sent:", tx.hash);
@@ -134,21 +143,34 @@ const AddPackageModal = ({ onClose }) => {
       await tx.wait();
 
       console.log("TX mined");
-      
+
       // Clear form
       setFormData({
         name: "",
         price: "",
         duration: "",
         includes: "",
-        excludes: ""
+        excludes: "",
       });
 
       // Refresh packages list
       await fetchPackages();
-      
-      alert("Package created successfully");
 
+      // Call onSave callback if provided
+      if (onSave) {
+        await onSave({
+          name: formData.name,
+          price: formData.price,
+          duration: formData.duration,
+          includes: formData.includes,
+          excludes: formData.excludes,
+        });
+      } else {
+        // Close modal after successful creation
+        onClose();
+      }
+
+      alert("Package created successfully");
     } catch (error) {
       console.error(error);
       alert("Error creating package: " + error.message);
@@ -159,18 +181,17 @@ const AddPackageModal = ({ onClose }) => {
 
   // Format price with commas
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-IN').format(price);
+    return new Intl.NumberFormat("en-IN").format(price);
   };
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-        
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto border border-white/10 shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-gray-800 p-6 border-b border-white/10 flex justify-between items-center">
+        <div className="sticky top-0 bg-gradient-to-r from-gray-900 to-gray-800 p-6 border-b border-white/20 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <h3 className="text-white text-xl font-bold">
-              {view === 'form' ? 'Create Package' : 'Your Packages'}
+              {view === "form" ? "Create Package" : "Your Packages"}
             </h3>
             {account && (
               <span className="text-xs bg-emerald-600/30 text-emerald-300 px-3 py-1 rounded-full">
@@ -180,10 +201,10 @@ const AddPackageModal = ({ onClose }) => {
           </div>
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setView(view === 'form' ? 'list' : 'form')}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              onClick={() => setView(view === "form" ? "list" : "form")}
+              className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
             >
-              {view === 'form' ? 'View Packages' : 'Create New'}
+              {view === "form" ? "View Packages" : "Create New"}
             </button>
             <button
               onClick={onClose}
@@ -196,147 +217,194 @@ const AddPackageModal = ({ onClose }) => {
 
         <div className="p-6">
           {/* View: Create Package Form */}
-          {view === 'form' && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              
-              {/* Form Fields */}
-              <div>
-                <label className="block text-sm text-green-300 mb-1">Package Name *</label>
-                <input
-                  required
-                  placeholder="e.g., Cardiac Bypass Surgery"
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-white/10 focus:border-emerald-500 focus:outline-none"
-                />
+          {view === "form" && (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Basic Information Section */}
+              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+                <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                  <Package className="h-5 w-5 mr-2 text-emerald-400" />
+                  Package Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-green-300 mb-2 font-medium">
+                      Package Name *
+                    </label>
+                    <input
+                      required
+                      placeholder="e.g., Cardiac Bypass Surgery"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-green-300 mb-2 font-medium">
+                      Price (in INR) *
+                    </label>
+                    <input
+                      required
+                      type="number"
+                      placeholder="450000"
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm text-green-300 mb-2 font-medium">
+                      Duration
+                    </label>
+                    <input
+                      placeholder="e.g., 7-10 days"
+                      value={formData.duration}
+                      onChange={(e) =>
+                        setFormData({ ...formData, duration: e.target.value })
+                      }
+                      className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm text-green-300 mb-1">Price (in INR) *</label>
-                <input
-                  required
-                  type="number"
-                  placeholder="450000"
-                  value={formData.price}
-                  onChange={(e) => setFormData({...formData, price: e.target.value})}
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-white/10 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-green-300 mb-1">Duration</label>
-                <input
-                  placeholder="e.g., 7-10 days"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-white/10 focus:border-emerald-500 focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-green-300 mb-1">Includes</label>
+              {/* Includes Section */}
+              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+                <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                  <CheckCircle className="h-5 w-5 mr-2 text-emerald-400" />
+                  Package Includes
+                </h3>
                 <textarea
                   placeholder="What's included in the package (one per line)"
                   value={formData.includes}
-                  onChange={(e) => setFormData({...formData, includes: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, includes: e.target.value })
+                  }
                   rows="3"
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-white/10 focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
+                <p className="text-xs text-gray-400 mt-2">
+                  Enter each item on a new line
+                </p>
               </div>
 
-              <div>
-                <label className="block text-sm text-green-300 mb-1">Excludes</label>
+              {/* Excludes Section */}
+              <div className="bg-white/5 rounded-lg p-6 border border-white/10">
+                <h3 className="text-lg font-semibold text-white flex items-center mb-4">
+                  <XCircle className="h-5 w-5 mr-2 text-red-400" />
+                  Package Excludes
+                </h3>
                 <textarea
                   placeholder="What's not included (one per line)"
                   value={formData.excludes}
-                  onChange={(e) => setFormData({...formData, excludes: e.target.value})}
+                  onChange={(e) =>
+                    setFormData({ ...formData, excludes: e.target.value })
+                  }
                   rows="3"
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-white/10 focus:border-emerald-500 focus:outline-none"
+                  className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
                 />
+                <p className="text-xs text-gray-400 mt-2">
+                  Enter each item on a new line
+                </p>
               </div>
 
               {/* Blockchain Info */}
-              <div className="bg-emerald-900/30 rounded-lg p-4 border border-emerald-500/30">
-                <div className="flex items-center mb-2">
-                  <Shield className="h-5 w-5 text-emerald-400 mr-2" />
-                  <span className="text-white font-medium">Blockchain Verification</span>
+              <div className="bg-emerald-900/20 rounded-lg p-6 border border-emerald-500/30">
+                <div className="flex items-start">
+                  <Shield className="h-5 w-5 text-emerald-400 mr-3 mt-0.5 shrink-0" />
+                  <div>
+                    <h4 className="text-white font-semibold mb-1">
+                      Blockchain Verification
+                    </h4>
+                    <p className="text-sm text-green-200">
+                      Package name and price will be permanently stored on
+                      blockchain for immutable record keeping. Additional
+                      details will be stored in secure metadata.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-green-300">
-                  Package name and price will be permanently stored on blockchain.
-                  Additional details will be stored in metadata.
-                </p>
               </div>
 
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={loading || !contract}
-                className="w-full bg-emerald-600 p-3 rounded-lg text-white font-medium hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 px-6 py-3 rounded-lg text-white font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading ? (
-                  <span className="flex items-center justify-center">
+                  <>
                     <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
                     Creating on Blockchain...
-                  </span>
+                  </>
                 ) : (
-                  <span className="flex items-center justify-center">
+                  <>
                     <Shield className="h-5 w-5 mr-2" />
                     Create Package on Blockchain
-                  </span>
+                  </>
                 )}
               </button>
             </form>
           )}
 
           {/* View: Packages List */}
-          {view === 'list' && (
+          {view === "list" && (
             <div className="space-y-4">
-              
               {/* Refresh Button */}
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-white">
+                  Your Packages
+                </h3>
                 <button
                   onClick={fetchPackages}
                   disabled={fetching}
-                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${fetching ? 'animate-spin' : ''}`} />
-                  {fetching ? 'Refreshing...' : 'Refresh'}
+                  <RefreshCw
+                    className={`h-4 w-4 mr-2 ${fetching ? "animate-spin" : ""}`}
+                  />
+                  {fetching ? "Refreshing..." : "Refresh"}
                 </button>
               </div>
 
               {/* Packages Grid */}
               {fetching ? (
-                <div className="text-center py-12">
+                <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
                   <RefreshCw className="h-12 w-12 animate-spin text-emerald-500 mx-auto mb-4" />
-                  <p className="text-white">Loading packages...</p>
+                  <p className="text-white font-medium">Loading packages...</p>
                 </div>
               ) : packages.length === 0 ? (
-                <div className="text-center py-12 bg-white/5 rounded-lg">
+                <div className="text-center py-12 bg-white/5 rounded-lg border border-white/10">
                   <Package className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-                  <h3 className="text-xl text-white mb-2">No Packages Found</h3>
-                  <p className="text-green-200 mb-4">
-                    You haven't created any packages yet.
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    No Packages Found
+                  </h3>
+                  <p className="text-green-200 mb-6">
+                    You haven't created any packages yet. Start by creating your
+                    first package!
                   </p>
                   <button
-                    onClick={() => setView('form')}
-                    className="px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"
+                    onClick={() => setView("form")}
+                    className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors"
                   >
                     Create Your First Package
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {packages.map((pkg) => (
                     <div
                       key={pkg.id}
-                      className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-all cursor-pointer border border-white/10"
+                      className="bg-white/10 backdrop-blur-md rounded-lg p-4 hover:bg-white/20 transition-all cursor-pointer border border-white/20"
                       onClick={() => setSelectedPackage(pkg)}
                     >
                       <div className="flex justify-between items-start">
                         <h4 className="text-white font-medium">{pkg.name}</h4>
                         <Shield className="h-4 w-4 text-emerald-400" />
                       </div>
-                      
+
                       <div className="mt-2 flex items-center text-emerald-300">
                         <DollarSign className="h-4 w-4 mr-1" />
                         <span>₹{formatPrice(pkg.price)}</span>
@@ -363,11 +431,13 @@ const AddPackageModal = ({ onClose }) => {
 
       {/* Package Details Modal */}
       {selectedPackage && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4">
-          <div className="bg-gray-800 rounded-xl max-w-2xl w-full">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl max-w-2xl w-full border border-white/10">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-xl font-bold text-white">Package Details</h3>
+                <h3 className="text-xl font-bold text-white">
+                  Package Details
+                </h3>
                 <button
                   onClick={() => setSelectedPackage(null)}
                   className="text-gray-400 hover:text-white"
@@ -379,7 +449,9 @@ const AddPackageModal = ({ onClose }) => {
               <div className="space-y-4">
                 {/* Basic Info */}
                 <div className="bg-white/5 rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Basic Information</h4>
+                  <h4 className="text-white font-medium mb-3">
+                    Basic Information
+                  </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <p className="text-xs text-green-300">Package Name</p>
@@ -387,11 +459,15 @@ const AddPackageModal = ({ onClose }) => {
                     </div>
                     <div>
                       <p className="text-xs text-green-300">Price</p>
-                      <p className="text-white">₹{formatPrice(selectedPackage.price)}</p>
+                      <p className="text-white">
+                        ₹{formatPrice(selectedPackage.price)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-green-300">Duration</p>
-                      <p className="text-white">{selectedPackage.duration || 'Not specified'}</p>
+                      <p className="text-white">
+                        {selectedPackage.duration || "Not specified"}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-green-300">Created</p>
@@ -404,7 +480,9 @@ const AddPackageModal = ({ onClose }) => {
                 {selectedPackage.includes && (
                   <div className="bg-white/5 rounded-lg p-4">
                     <h4 className="text-white font-medium mb-2">Includes</h4>
-                    <p className="text-green-200 whitespace-pre-line">{selectedPackage.includes}</p>
+                    <p className="text-green-200 whitespace-pre-line">
+                      {selectedPackage.includes}
+                    </p>
                   </div>
                 )}
 
@@ -412,7 +490,9 @@ const AddPackageModal = ({ onClose }) => {
                 {selectedPackage.excludes && (
                   <div className="bg-white/5 rounded-lg p-4">
                     <h4 className="text-white font-medium mb-2">Excludes</h4>
-                    <p className="text-green-200 whitespace-pre-line">{selectedPackage.excludes}</p>
+                    <p className="text-green-200 whitespace-pre-line">
+                      {selectedPackage.excludes}
+                    </p>
                   </div>
                 )}
 
@@ -424,13 +504,16 @@ const AddPackageModal = ({ onClose }) => {
                   </h4>
                   <div className="space-y-2">
                     <p className="text-xs text-green-300 break-all">
-                      <span className="font-medium">Package ID:</span> {selectedPackage.packageId}
+                      <span className="font-medium">Package ID:</span>{" "}
+                      {selectedPackage.packageId}
                     </p>
                     <p className="text-xs text-green-300 break-all">
-                      <span className="font-medium">Hospital Address:</span> {selectedPackage.hospital}
+                      <span className="font-medium">Hospital Address:</span>{" "}
+                      {selectedPackage.hospital}
                     </p>
                     <p className="text-xs text-green-300 break-all">
-                      <span className="font-medium">Metadata Hash:</span> {selectedPackage.metadataHash.substring(0, 50)}...
+                      <span className="font-medium">Metadata Hash:</span>{" "}
+                      {selectedPackage.metadataHash.substring(0, 50)}...
                     </p>
                   </div>
                 </div>
